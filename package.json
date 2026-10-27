@@ -1,0 +1,13 @@
+{
+  "name": "virtual-office",
+  "version": "2.0.0",
+  "description": "A living, editable map of a team: rooms, desks, people and the things on their desks.",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "share": "node server.js --share"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

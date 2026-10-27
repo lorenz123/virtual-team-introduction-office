@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Virtual Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ============ HOME: all teams (server mode) ============ -->
+<main class="home" id="home" hidden>
+  <header class="home-hero">
+    <svg class="logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3zm0 4.2 4 1.5v3.6c0 2.9-1.7 5.6-4 6.8V6.2z"/></svg>
+    <div>
+      <h1>VIRTUAL OFFICE</h1>
+      <p>Build a living map of your team: rooms, desks, people and the things on their desks. Every team gets its own office and link.</p>
+    </div>
+  </header>
+  <div class="home-grid">
+    <section class="home-card" aria-labelledby="hTeams">
+      <div class="mg-head"><h2 id="hTeams">Teams on this server</h2><input class="search" id="teamSearch" type="search" placeholder="Find a team" aria-label="Find a team"></div>
+      <div class="team-list" id="teamList"><p class="empty-note">Loading teams…</p></div>
+    </section>
+    <section class="home-card" aria-labelledby="hCreate">
+      <h2 id="hCreate">Create a team office</h2>
+      <form id="createForm" class="create-form" novalidate>
+        <div class="field"><label for="c-name">Team name</label><input id="c-name" maxlength="80" placeholder="e.g. Payments QA" required autocomplete="off"><span class="err" id="e-cname"></span></div>
+        <fieldset class="field tpl-set"><legend class="lbl">Start from</legend><div id="tplList" class="tpl-list"></div></fieldset>
+        <div class="field"><label for="c-code">Edit code <span class="opt">(optional)</span></label><input id="c-code" type="password" maxlength="64" autocomplete="new-password" placeholder="Leave blank so anyone can edit"><small>With a code, everyone can view the office but only people with the code can change it.</small></div>
+        <button class="btn primary big-btn" type="submit">Create office</button>
+      </form>
+    </section>
+  </div>
+</main>
+
+<!-- ============ TEAM OFFICE ============ -->
+<div class="app" id="app" hidden>
+  <header class="top">
+    <div class="tile brand" id="brandTile">
+      <span class="brand-logo" id="brandLogo"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3zm0 4.2 4 1.5v3.6c0 2.9-1.7 5.6-4 6.8V6.2z"/></svg></span>
+      <div class="brand-text"><h1 id="teamName">VIRTUAL OFFICE</h1><p id="teamTag"></p></div>
+      <a class="all-teams" id="allTeams" href="/" hidden>All teams</a>
+      <button class="brand-edit" id="brandEdit" type="button" hidden aria-label="Edit name and logo" title="Edit name and logo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.2V21h3.8L17.8 10l-3.8-3.8zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.8 3.8z"/></svg></button>
+    </div>
+    <div class="tile">
+      <svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM9 13c-3.3 0-7 1.7-7 4v3h14v-3c0-2.3-3.7-4-7-4zm8 0c-.6 0-1.2 0-1.8.2 1.1.9 1.8 2.1 1.8 3.8v3h5v-3c0-2.2-2.7-4-5-4z"/></svg>
+      <div><div class="lab">Team</div><div class="val"><span class="big" id="teamCount">–</span> <span id="teamWord">members</span></div></div>
+    </div>
+    <div class="tile loc-tile">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+      <div class="loc-wrap"><div class="lab">Locations · local time now</div><div class="locs" id="locs">–</div></div>
+    </div>
+    <div class="tile">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div style="min-width:0"><div class="lab">Daily stand-up</div><div class="su-time" id="standup">–</div><div class="su-sub" id="countdown"></div></div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="stage-col">
+      <section class="view" id="view-office" aria-label="Office map">
+        <div class="edit-bar" id="editBar" hidden>
+          <div class="eb-group"><span class="eb-lbl">Add room</span>
+            <button class="btn sm" data-new-room="desks">Team room</button><button class="btn sm" data-new-room="meeting">Meeting room</button><button class="btn sm" data-new-room="lounge">Lounge</button><button class="btn sm" data-new-room="board">Ticket board</button><button class="btn sm" data-new-room="client">Client</button><button class="btn sm" data-new-room="open">Open area</button>
+          </div>
+          <div class="eb-group"><span class="eb-lbl">Add decor</span><div class="decor-pal" id="decorPal"></div></div>
+          <div class="eb-group"><label class="eb-lbl" for="floorW">Floor width</label><select id="floorW" class="sel-sm"><option value="1000">Standard</option><option value="1300">Wide</option><option value="1600">Extra wide</option></select></div>
+          <p class="hint eb-hint">Drag rooms by their title bar and resize from the corner. Drag people between rooms. Click anything to edit it.</p>
+        </div>
+        <div class="viewport" id="viewport">
+          <div class="world" id="world"></div>
+          <div class="notice" id="notice" hidden></div>
+          <div class="dim" id="dim"></div>
+          <div class="monitor" id="monitor" role="dialog" aria-modal="false" aria-labelledby="monName"></div>
+        </div>
+      </section>
+      <section class="view pane" id="view-tz" hidden></section>
+      <section class="view pane" id="view-wrap" hidden></section>
+      <section class="view pane" id="view-manage" hidden></section>
+      <div class="selected" id="selected"></div>
+    </div>
+
+    <aside class="side">
+      <div class="card-p">
+        <h3><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 20h16v2H4zM5 10h3v8H5zm5-6h3v14h-3zm5 9h3v5h-3z"/></svg>Team mix</h3>
+        <div class="mix" id="mix"></div>
+      </div>
+      <div class="card-p">
+        <h3><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v3h16v-3c0-2.8-3.6-5-8-5z"/></svg>Jump to a teammate</h3>
+        <div class="roster" id="roster"></div>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" data-view="office" aria-selected="true"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 2 11h3v9h6v-6h2v6h6v-9h3z"/></svg>Office</button>
+    <button class="tab" role="tab" data-view="tz" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21"/></svg>Time zones</button>
+    <button class="tab" role="tab" data-view="wrap" aria-selected="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 2h2v20H5zm3 1h11l-2 4 2 4H8z"/></svg>Wrap-up</button>
+    <button class="tab" role="tab" data-view="manage" aria-selected="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1L11 21h4l.4-2.9c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z"/></svg>Manage team</button>
+    <span class="tabs-right">
+      <button class="btn sm present-btn" id="presentBtn" type="button" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg><span>Present the team</span></button>
+      <button class="btn sm" id="unlockBtn" hidden>Unlock editing</button>
+      <span class="ro-badge" id="roBadge" hidden>View only</span>
+      <button class="editmode" id="editMode" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.2V21h3.8L17.8 10l-3.8-3.8zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.8 3.8z"/></svg><span>Edit office</span></button>
+    </span>
+  </nav>
+</div>
+
+<div class="lost" id="lost" hidden><h1>Team not found</h1><p>There's no office at this address. It may have been deleted or renamed.</p><a class="btn primary" href="/">See all teams</a></div>
+
+<div class="presenter" id="presenter" role="region" aria-label="Audio presenter" hidden>
+  <p class="pr-cap" id="prCap" aria-live="polite"></p>
+  <div class="pr-ctl">
+    <span class="pr-pos" id="prPos"></span>
+    <button class="btn sm" id="prPrev" type="button">← Prev</button>
+    <button class="btn sm primary" id="prPause" type="button">❚❚ Pause</button>
+    <button class="btn sm" id="prNext" type="button">Next →</button>
+    <button class="btn sm danger" id="prStop" type="button">■ Stop</button>
+    <label class="pr-sel"><span>Voice</span><select id="prVoice" class="sel-sm"></select></label>
+    <label class="pr-sel"><span>Speed</span><select id="prRate" class="sel-sm"><option value="0.85">Slow</option><option value="1">Normal</option><option value="1.15">Brisk</option></select></label>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="templates.js"></script>
+<script src="art.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
